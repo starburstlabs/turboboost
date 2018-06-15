@@ -57,7 +57,7 @@ turboboostComplete = (e, resp) ->
     if (location = resp.getResponseHeader('Location')) and !$el.attr('data-no-turboboost-redirect')
       e.preventDefault()
       e.stopPropagation()
-      Turbolinks.visit(location)
+      Turbolinks.visit(location, action: 'replace')
       return
     else
       enableForm $el if isForm and Turboboost.handleFormDisabling
