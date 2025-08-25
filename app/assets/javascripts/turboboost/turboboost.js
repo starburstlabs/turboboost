@@ -122,7 +122,7 @@ const restrictResponseToBody = function(html) {
   }
 };
 
-var maybeInsertSuccessResponseBody = function(resp) {
+const maybeInsertSuccessResponseBody = function(resp) {
   let header;
   if (!(header = tryJSONParse(resp.getResponseHeader('X-Turboboost-Render')))) { return; }
   const html = restrictResponseToBody(resp.responseText);
