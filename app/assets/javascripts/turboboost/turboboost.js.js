@@ -1,115 +1,145 @@
-@Turboboost =
-  insertErrors: false
-  handleFormDisabling: true
+/*
+ * decaffeinate suggestions:
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS208: Avoid top-level this
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+this.Turboboost = {
+  insertErrors: false,
+  handleFormDisabling: true,
   defaultError: "Sorry, there was an error."
+};
 
-turboboostable = "[data-turboboost]"
-errID = "#error_explanation"
-errTemplate = (errors) ->
-  "<ul><li>#{$.makeArray(errors).join('</li><li>')}</li></ul>"
-formProcessingClass = 'turboboost-form-processing'
+const turboboostable = "[data-turboboost]";
+const errID = "#error_explanation";
+const errTemplate = errors => `<ul><li>${$.makeArray(errors).join('</li><li>')}</li></ul>`;
+const formProcessingClass = 'turboboost-form-processing';
 
-enableForm = ($form) ->
-  $form.removeClass(formProcessingClass)
-  $form.find("[type='submit']").removeAttr('disabled').data('turboboostDisabled', false)
+const enableForm = function($form) {
+  $form.removeClass(formProcessingClass);
+  return $form.find("[type='submit']").removeAttr('disabled').data('turboboostDisabled', false);
+};
 
-disableForm = ($form) ->
-  $form.addClass(formProcessingClass)
-  $form.find("[type='submit']").attr('disabled', 'disabled').data('turboboostDisabled', true)
+const disableForm = function($form) {
+  $form.addClass(formProcessingClass);
+  return $form.find("[type='submit']").attr('disabled', 'disabled').data('turboboostDisabled', true);
+};
 
-tryJSONParse = (str) ->
-  try
-    JSON.parse str
-  catch e
-    null
+const tryJSONParse = function(str) {
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return null;
+  }
+};
 
-insertErrorContainer = ($form) ->
-  $el = $("<div id='#{errID.substr(1)}'></div>")
-  switch Turboboost.insertErrors
-    when "append" then $form.append($el)
-    when "beforeSubmit" then $form.find("[type='submit']").before($el)
-    when "afterSubmit" then $form.find("[type='submit']").after($el)
-    when true then $form.prepend($el)
-    else
-      if Turboboost.insertErrors.match(/^\W+/)
-        $form.find(Turboboost.insertErrors).html($el)
-      else
-        $form.prepend($el)
-  $el
+const insertErrorContainer = function($form) {
+  const $el = $(`<div id='${errID.substr(1)}'></div>`);
+  switch (Turboboost.insertErrors) {
+    case "append": $form.append($el); break;
+    case "beforeSubmit": $form.find("[type='submit']").before($el); break;
+    case "afterSubmit": $form.find("[type='submit']").after($el); break;
+    case true: $form.prepend($el); break;
+    default:
+      if (Turboboost.insertErrors.match(/^\W+/)) {
+        $form.find(Turboboost.insertErrors).html($el);
+      } else {
+        $form.prepend($el);
+      }
+  }
+  return $el;
+};
 
-turboboostFormError = (e, errors) ->
-  return if !Turboboost.insertErrors
-  errors = tryJSONParse errors
-  errors = [Turboboost.defaultError] if !errors.length
-  $form = $(e.target)
-  $el = $form.find(errID)
-  $el = insertErrorContainer($form) if !$el.length
-  $el.html errTemplate(errors)
+const turboboostFormError = function(e, errors) {
+  if (!Turboboost.insertErrors) { return; }
+  errors = tryJSONParse(errors);
+  if (!errors.length) { errors = [Turboboost.defaultError]; }
+  const $form = $(e.target);
+  let $el = $form.find(errID);
+  if (!$el.length) { $el = insertErrorContainer($form); }
+  return $el.html(errTemplate(errors));
+};
 
-turboboostComplete = (e, resp) ->
-  $el = $(@)
-  isForm = @nodeName is "FORM"
-  status = parseInt(resp.status)
+const turboboostComplete = function(e, resp) {
+  let $inserted;
+  const $el = $(this);
+  const isForm = this.nodeName === "FORM";
+  const status = parseInt(resp.status);
 
-  if 200 <= status < 300
-    $el.trigger "turboboost:success", tryJSONParse resp.getResponseHeader('X-Flash')
-    $el.find(errID).remove() if Turboboost.insertErrors and isForm
-    if (location = resp.getResponseHeader('Location')) and !$el.attr('data-no-turboboost-redirect')
-      e.preventDefault()
-      e.stopPropagation()
-      Turbolinks.visit(location, action: 'replace')
-      return
-    else
-      enableForm $el if isForm and Turboboost.handleFormDisabling
-      $inserted = maybeInsertSuccessResponseBody(resp)
-  else if 400 <= status  < 600
-    enableForm $el if isForm and Turboboost.handleFormDisabling
-    $el.trigger "turboboost:error", resp.responseText
+  if (200 <= status && status < 300) {
+    let location;
+    $el.trigger("turboboost:success", tryJSONParse(resp.getResponseHeader('X-Flash')));
+    if (Turboboost.insertErrors && isForm) { $el.find(errID).remove(); }
+    if ((location = resp.getResponseHeader('Location')) && !$el.attr('data-no-turboboost-redirect')) {
+      e.preventDefault();
+      e.stopPropagation();
+      Turbolinks.visit(location, {action: 'replace'});
+      return;
+    } else {
+      if (isForm && Turboboost.handleFormDisabling) { enableForm($el); }
+      $inserted = maybeInsertSuccessResponseBody(resp);
+    }
+  } else if (400 <= status && status  < 600) {
+    if (isForm && Turboboost.handleFormDisabling) { enableForm($el); }
+    $el.trigger("turboboost:error", resp.responseText);
+  }
 
-  if $.contains(document.documentElement, $el[0])
-    $el.trigger "turboboost:complete"
-  else if $inserted
-    $inserted.trigger "turboboost:complete"
+  if ($.contains(document.documentElement, $el[0])) {
+    return $el.trigger("turboboost:complete");
+  } else if ($inserted) {
+    return $inserted.trigger("turboboost:complete");
+  }
+};
 
-turboboostBeforeSend = (e, xhr, settings) ->
-  xhr.setRequestHeader('X-Turboboost', '1')
-  isForm = @nodeName is "FORM"
-  return e.stopPropagation() unless isForm
-  $el = $(@)
-  disableForm $el if isForm and Turboboost.handleFormDisabling
-  if settings.type is "GET" and !$el.attr('data-no-turboboost-redirect')
-    Turbolinks.visit [@action, $el.serialize()].join("?")
-    return false
+const turboboostBeforeSend = function(e, xhr, settings) {
+  xhr.setRequestHeader('X-Turboboost', '1');
+  const isForm = this.nodeName === "FORM";
+  if (!isForm) { return e.stopPropagation(); }
+  const $el = $(this);
+  if (isForm && Turboboost.handleFormDisabling) { disableForm($el); }
+  if ((settings.type === "GET") && !$el.attr('data-no-turboboost-redirect')) {
+    Turbolinks.visit([this.action, $el.serialize()].join("?"));
+    return false;
+  }
+};
 
-renderFunctionForOption = (option) ->
-  switch option
-    when 'within' then 'html'
-    when 'replace' then 'replaceWith'
-    else
-      option
+const renderFunctionForOption = function(option) {
+  switch (option) {
+    case 'within': return 'html';
+    case 'replace': return 'replaceWith';
+    default:
+      return option;
+  }
+};
 
-restrictResponseToBody = (html) ->
-  if /<(html|body)/i.test(html)
-    doc = document.documentElement.cloneNode()
-    doc.innerHTML = html
-    doc.querySelector('body').innerHTML
-  else
-    html
+const restrictResponseToBody = function(html) {
+  if (/<(html|body)/i.test(html)) {
+    const doc = document.documentElement.cloneNode();
+    doc.innerHTML = html;
+    return doc.querySelector('body').innerHTML;
+  } else {
+    return html;
+  }
+};
 
-maybeInsertSuccessResponseBody = (resp) ->
-  return unless (header = tryJSONParse(resp.getResponseHeader('X-Turboboost-Render')))
-  html = restrictResponseToBody(resp.responseText)
-  renderOption = Object.keys(header)[0]
-  renderFunction = renderFunctionForOption(renderOption)
-  $(header[renderOption])[renderFunction](html)
+var maybeInsertSuccessResponseBody = function(resp) {
+  let header;
+  if (!(header = tryJSONParse(resp.getResponseHeader('X-Turboboost-Render')))) { return; }
+  const html = restrictResponseToBody(resp.responseText);
+  const renderOption = Object.keys(header)[0];
+  const renderFunction = renderFunctionForOption(renderOption);
+  return $(header[renderOption])[renderFunction](html);
+};
 
-maybeReenableForms = ->
-  return unless Turboboost.handleFormDisabling
-  $("form#{turboboostable} [type='submit']").each ->
-    enableForm $(@).closest('form') if $(@).data('turboboostDisabled')
+const maybeReenableForms = function() {
+  if (!Turboboost.handleFormDisabling) { return; }
+  return $(`form${turboboostable} [type='submit']`).each(function() {
+    if ($(this).data('turboboostDisabled')) { return enableForm($(this).closest('form')); }
+  });
+};
 
 $(document)
   .on("ajax:beforeSend", turboboostable, turboboostBeforeSend)
   .on("ajax:complete", turboboostable, turboboostComplete)
-  .on("turboboost:error", "form#{turboboostable}", turboboostFormError)
-  .on("page:restore", maybeReenableForms)
+  .on("turboboost:error", `form${turboboostable}`, turboboostFormError)
+  .on("page:restore", maybeReenableForms);
