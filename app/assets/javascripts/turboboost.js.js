@@ -1,88 +1,119 @@
-@Turboboost =
-  insertErrors: false
+/*
+ * decaffeinate suggestions:
+ * DS101: Remove unnecessary use of Array.from
+ * DS102: Remove unnecessary code created because of implicit returns
+ * DS208: Avoid top-level this
+ * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
+ */
+this.Turboboost = {
+  insertErrors: false,
   defaultError: "Sorry, there was an error."
+};
 
-turboboostable = "[data-turboboost]"
-errID = "#error_explanation"
-errTemplate = (errors) ->
-  "<ul><li>#{$.makeArray(errors).join('</li><li>')}</li></ul>"
+const turboboostable = "[data-turboboost]";
+const errID = "#error_explanation";
+const errTemplate = errors => `<ul><li>${$.makeArray(errors).join('</li><li>')}</li></ul>`;
 
-enableForm = ($form) ->
-  $form.find("[type='submit']").removeAttr('disabled')
+const enableForm = $form => $form.find("[type='submit']").removeAttr('disabled');
 
-disableForm = ($form) ->
-  $form.find("[type='submit']").attr('disabled', 'disabled')
+const disableForm = $form => $form.find("[type='submit']").attr('disabled', 'disabled');
 
-tryJSONParse = (str) ->
-  try
-    JSON.parse str
-  catch e
-    null
+const tryJSONParse = function(str) {
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return null;
+  }
+};
 
-turboboostFormError = (e, errors) ->
-  return if !Turboboost.insertErrors
-  errors = tryJSONParse errors
-  errors = [Turboboost.defaultError] if !errors.length
-  $form = $(e.target)
-  $el = $form.find(errID)
-  if !$el.length
-    $el = $("<div id='#{errID.substr(1)}'></div>")
-    switch Turboboost.insertErrors
-      when "append" then $form.append($el)
-      when "beforeSubmit" then $form.find("[type='submit']").before($el)
-      when "afterSubmit" then $form.find("[type='submit']").after($el)
-      when true then $form.prepend($el)
-      else
-        if Turboboost.insertErrors.match(/^\W+/)
-          $form.find(Turboboost.insertErrors).html($el)
-        else
-          $form.prepend($el)
-  $el.html errTemplate(errors)
+const turboboostFormError = function(e, errors) {
+  if (!Turboboost.insertErrors) { return; }
+  errors = tryJSONParse(errors);
+  if (!errors.length) { errors = [Turboboost.defaultError]; }
+  const $form = $(e.target);
+  let $el = $form.find(errID);
+  if (!$el.length) {
+    $el = $(`<div id='${errID.substr(1)}'></div>`);
+    switch (Turboboost.insertErrors) {
+      case "append": $form.append($el); break;
+      case "beforeSubmit": $form.find("[type='submit']").before($el); break;
+      case "afterSubmit": $form.find("[type='submit']").after($el); break;
+      case true: $form.prepend($el); break;
+      default:
+        if (Turboboost.insertErrors.match(/^\W+/)) {
+          $form.find(Turboboost.insertErrors).html($el);
+        } else {
+          $form.prepend($el);
+        }
+    }
+  }
+  return $el.html(errTemplate(errors));
+};
 
-turboboostComplete = (e, resp) ->
-  $el = $(@)
-  isForm = @nodeName is "FORM"
+const turboboostComplete = function(e, resp) {
+  const $el = $(this);
+  const isForm = this.nodeName === "FORM";
 
-  if resp.status in [200..299]
-    $el.trigger "turboboost:success", tryJSONParse resp.getResponseHeader('X-Flash')
-    $el.find(errID).remove() if Turboboost.insertErrors and isForm
-    if (location = resp.getResponseHeader('Location')) and !$el.attr('data-no-turboboost-redirect')
-      Turbolinks.visit(location)
-    else
-      enableForm $el if isForm
-      maybeInsertSuccessResponseBody(resp)
+  if (Array.from(__range__(200, 299, true)).includes(resp.status)) {
+    let location;
+    $el.trigger("turboboost:success", tryJSONParse(resp.getResponseHeader('X-Flash')));
+    if (Turboboost.insertErrors && isForm) { $el.find(errID).remove(); }
+    if ((location = resp.getResponseHeader('Location')) && !$el.attr('data-no-turboboost-redirect')) {
+      Turbolinks.visit(location);
+    } else {
+      if (isForm) { enableForm($el); }
+      maybeInsertSuccessResponseBody(resp);
+    }
+  }
 
-  if resp.status in [400..599]
-    enableForm $el if isForm
-    $el.trigger "turboboost:error", resp.responseText
+  if (Array.from(__range__(400, 599, true)).includes(resp.status)) {
+    if (isForm) { enableForm($el); }
+    $el.trigger("turboboost:error", resp.responseText);
+  }
 
-  $el.trigger "turboboost:complete"
+  return $el.trigger("turboboost:complete");
+};
 
-turboboostBeforeSend = (e, xhr, settings) ->
-  xhr.setRequestHeader('X-Turboboost', '1')
-  isForm = @nodeName is "FORM"
-  return e.stopPropagation() unless isForm
-  $el = $(@)
-  disableForm $el
-  if settings.type is "GET" and !$el.attr('data-no-turboboost-redirect')
-    Turbolinks.visit [@action, $el.serialize()].join("?")
-    return false
+const turboboostBeforeSend = function(e, xhr, settings) {
+  xhr.setRequestHeader('X-Turboboost', '1');
+  const isForm = this.nodeName === "FORM";
+  if (!isForm) { return e.stopPropagation(); }
+  const $el = $(this);
+  disableForm($el);
+  if ((settings.type === "GET") && !$el.attr('data-no-turboboost-redirect')) {
+    Turbolinks.visit([this.action, $el.serialize()].join("?"));
+    return false;
+  }
+};
 
-maybeInsertSuccessResponseBody = (resp) ->
-  if (scope = resp.getResponseHeader('X-Within'))
-    $(scope).html(resp.responseText)
-  else if (scope = resp.getResponseHeader('X-Replace'))
-    $(scope).replaceWith(resp.responseText)
-  else if (scope = resp.getResponseHeader('X-Append'))
-    $(scope).append(resp.responseText)
-  else if (scope = resp.getResponseHeader('X-Prepend'))
-    $(scope).prepend(resp.responseText)
-  else if (scope = resp.getResponseHeader('X-Before'))
-    $(scope).before(resp.responseText)
-  else if (scope = resp.getResponseHeader('X-After'))
-    $(scope).after(resp.responseText)
+var maybeInsertSuccessResponseBody = function(resp) {
+  let scope;
+  if (scope = resp.getResponseHeader('X-Within')) {
+    return $(scope).html(resp.responseText);
+  } else if (scope = resp.getResponseHeader('X-Replace')) {
+    return $(scope).replaceWith(resp.responseText);
+  } else if (scope = resp.getResponseHeader('X-Append')) {
+    return $(scope).append(resp.responseText);
+  } else if (scope = resp.getResponseHeader('X-Prepend')) {
+    return $(scope).prepend(resp.responseText);
+  } else if (scope = resp.getResponseHeader('X-Before')) {
+    return $(scope).before(resp.responseText);
+  } else if (scope = resp.getResponseHeader('X-After')) {
+    return $(scope).after(resp.responseText);
+  }
+};
 
 $(document)
   .on("ajax:beforeSend", turboboostable, turboboostBeforeSend)
   .on("ajax:complete", turboboostable, turboboostComplete)
-  .on("turboboost:error", "form#{turboboostable}", turboboostFormError)
+  .on("turboboost:error", `form${turboboostable}`, turboboostFormError);
+
+function __range__(left, right, inclusive) {
+  let range = [];
+  let ascending = left < right;
+  let end = !inclusive ? right : ascending ? right + 1 : right - 1;
+  for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
+    range.push(i);
+  }
+  return range;
+}
