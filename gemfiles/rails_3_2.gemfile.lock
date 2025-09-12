@@ -2,7 +2,6 @@ PATH
   remote: ../
   specs:
     turboboost (0.0.11)
-      coffee-rails
       jquery-rails
       railties
       turbolinks
@@ -45,13 +44,6 @@ GEM
     arel (3.0.3)
     awesome_print (1.6.1)
     builder (3.0.4)
-    coffee-rails (3.2.2)
-      coffee-script (>= 2.2.0)
-      railties (~> 3.2.0)
-    coffee-script (2.3.0)
-      coffee-script-source
-      execjs
-    coffee-script-source (1.8.0)
     erubis (2.7.0)
     execjs (2.2.2)
     hike (1.2.3)
@@ -112,8 +104,6 @@ GEM
     treetop (1.4.15)
       polyglot
       polyglot (>= 0.3.1)
-    turbolinks (2.5.3)
-      coffee-rails
     turn (0.9.7)
       ansi
       minitest (~> 4)
